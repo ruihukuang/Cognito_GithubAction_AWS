@@ -20,37 +20,73 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.REGION }}
 
-    - name: Create Cognito User Pool
-      id: create_user_pool
+    - name: Check and Create Cognito User Pool
+      id: check_create_user_pool
       run: |
-        aws cognito-idp create-user-pool --pool-name MyUserPool --region ${{ secrets.REGION }} > user-pool-output.json
-        USER_POOL_ID=$(jq -r '.UserPool.Id' user-pool-output.json)
+        USER_POOL_NAME="MyUserPool"
+        EXISTING_POOL_ID=$(aws cognito-idp list-user-pools --max-results 60 --region ${{ secrets.REGION }} | jq -r --arg name "$USER_POOL_NAME" '.UserPools[] | select(.Name == $name) | .Id')
+        if [ -z "$EXISTING_POOL_ID" ]; then
+          echo "User Pool does not exist. Creating new User Pool."
+          aws cognito-idp create-user-pool --pool-name $USER_POOL_NAME --region ${{ secrets.REGION }} > user-pool-output.json
+          USER_POOL_ID=$(jq -r '.UserPool.Id' user-pool-output.json)
+        else
+          echo "User Pool already exists. Skipping creation."
+          USER_POOL_ID=$EXISTING_POOL_ID
+        fi
         echo "USER_POOL_ID=$USER_POOL_ID" >> $GITHUB_ENV
 
-    - name: Create Cognito Identity Pool
-      id: create_identity_pool
+    - name: Check and Create Cognito Identity Pool
+      id: check_create_identity_pool
       run: |
-        aws cognito-identity create-identity-pool --identity-pool-name MyIdentityPool --allow-unauthenticated-identities --region ${{ secrets.REGION }} > identity-pool-output.json
-        IDENTITY_POOL_ID=$(jq -r '.IdentityPoolId' identity-pool-output.json)
+        IDENTITY_POOL_NAME="MyIdentityPool"
+        EXISTING_IDENTITY_POOL_ID=$(aws cognito-identity list-identity-pools --max-results 60 --region ${{ secrets.REGION }} | jq -r --arg name "$IDENTITY_POOL_NAME" '.IdentityPools[] | select(.IdentityPoolName == $name) | .IdentityPoolId')
+        if [ -z "$EXISTING_IDENTITY_POOL_ID" ]; then
+          echo "Identity Pool does not exist. Creating new Identity Pool."
+          aws cognito-identity create-identity-pool --identity-pool-name $IDENTITY_POOL_NAME --allow-unauthenticated-identities --region ${{ secrets.REGION }} > identity-pool-output.json
+          IDENTITY_POOL_ID=$(jq -r '.IdentityPoolId' identity-pool-output.json)
+        else
+          echo "Identity Pool already exists. Skipping creation."
+          IDENTITY_POOL_ID=$EXISTING_IDENTITY_POOL_ID
+        fi
         echo "IDENTITY_POOL_ID=$IDENTITY_POOL_ID" >> $GITHUB_ENV
 
     - name: Update Trust Policy with Identity Pool ID
       run: |
         jq '.Statement[0].Condition.StringEquals."cognito-identity.amazonaws.com:aud" = env.IDENTITY_POOL_ID' trust-policy-template.json > trust-policy.json
 
-    - name: Create Authenticated Role
-      id: create_auth_role
+    - name: Check and Create Authenticated Role
+      id: check_create_auth_role
       run: |
-        aws iam create-role --role-name AuthenticatedRole --assume-role-policy-document file://trust-policy.json > auth-role-output.json
-        AUTH_ROLE_ARN=$(jq -r '.Role.Arn' auth-role-output.json)
+        ROLE_NAME="AuthenticatedRole"
+        EXISTING_ROLE_ARN=$(aws iam get-role --role-name $ROLE_NAME --region ap-southeast-2 --query 'Role.Arn' --output text 2>/dev/null || echo "")
+        if [ -z "$EXISTING_ROLE_ARN" ]; then
+          echo "Authenticated Role does not exist. Creating new Role."
+          aws iam create-role --role-name $ROLE_NAME --assume-role-policy-document file://trust-policy.json > auth-role-output.json
+          AUTH_ROLE_ARN=$(jq -r '.Role.Arn' auth-role-output.json)
+        else
+          echo "Authenticated Role already exists. Skipping creation."
+          AUTH_ROLE_ARN=$EXISTING_ROLE_ARN
+        fi
         echo "AUTH_ROLE_ARN=$AUTH_ROLE_ARN" >> $GITHUB_ENV
 
-    - name: Attach Policies to Authenticated Role
+    - name: Check and Attach Policies to Authenticated Role
       run: |
-        aws iam attach-role-policy --role-name AuthenticatedRole --policy-arn arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
-        aws iam attach-role-policy --role-name AuthenticatedRole --policy-arn arn:aws:iam::aws:policy/AmazonEKSVPCResourceController
-        # Add any additional policies needed for network access to EKS private endpoints
+        POLICIES_ATTACHED=$(aws iam list-attached-role-policies --role-name AuthenticatedRole --region ${{ secrets.REGION }} --query 'AttachedPolicies[].PolicyArn' --output text)
+        if [[ $POLICIES_ATTACHED != *"arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"* ]]; then
+          echo "Attaching AmazonEKSClusterPolicy."
+          aws iam attach-role-policy --role-name AuthenticatedRole --policy-arn arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+        fi
+        if [[ $POLICIES_ATTACHED != *"arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"* ]]; then
+          echo "Attaching AmazonEKSVPCResourceController."
+          aws iam attach-role-policy --role-name AuthenticatedRole --policy-arn arn:aws:iam::aws:policy/AmazonEKSVPCResourceController
+        fi
 
-    - name: Configure Identity Providers
+    - name: Check and Configure Identity Providers
       run: |
-        aws cognito-identity set-identity-pool-roles --identity-pool-id ${{ env.IDENTITY_POOL_ID }} --roles authenticated=${{ env.AUTH_ROLE_ARN }} --region ${{ secrets.REGION }}
+        CURRENT_ROLES=$(aws cognito-identity get-identity-pool-roles --identity-pool-id ${{ env.IDENTITY_POOL_ID }} --region ${{ secrets.REGION }} --query 'Roles.authenticated' --output text)
+        if [ "$CURRENT_ROLES" != "${{ env.AUTH_ROLE_ARN }}" ]; then
+          echo "Configuring Identity Providers."
+          aws cognito-identity set-identity-pool-roles --identity-pool-id ${{ env.IDENTITY_POOL_ID }} --roles authenticated=${{ env.AUTH_ROLE_ARN }} --region ${{ secrets.REGION }}
+        else
+          echo "Identity Providers already configured."
+        fi
