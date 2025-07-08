@@ -23,7 +23,7 @@ jobs:
     - name: Create Cognito User Pool
       id: create_user_pool
       run: |
-        aws cognito-idp create-user-pool --pool-name MyUserPool --region <your-region> > user-pool-output.json
+        aws cognito-idp create-user-pool --pool-name MyUserPool --region ${{ secrets.REGION }} > user-pool-output.json
         USER_POOL_ID=$(jq -r '.UserPool.Id' user-pool-output.json)
         echo "USER_POOL_ID=$USER_POOL_ID" >> $GITHUB_ENV
 
