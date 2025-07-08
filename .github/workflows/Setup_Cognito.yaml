@@ -18,7 +18,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: <your-region>
+        aws-region: ${{ secrets.REGION }}
 
     - name: Create Cognito User Pool
       id: create_user_pool
@@ -30,7 +30,7 @@ jobs:
     - name: Create Cognito Identity Pool
       id: create_identity_pool
       run: |
-        aws cognito-identity create-identity-pool --identity-pool-name MyIdentityPool --allow-unauthenticated-identities --region <your-region> > identity-pool-output.json
+        aws cognito-identity create-identity-pool --identity-pool-name MyIdentityPool --allow-unauthenticated-identities --region ${{ secrets.REGION }} > identity-pool-output.json
         IDENTITY_POOL_ID=$(jq -r '.IdentityPoolId' identity-pool-output.json)
         echo "IDENTITY_POOL_ID=$IDENTITY_POOL_ID" >> $GITHUB_ENV
 
@@ -53,4 +53,4 @@ jobs:
 
     - name: Configure Identity Providers
       run: |
-        aws cognito-identity set-identity-pool-roles --identity-pool-id ${{ env.IDENTITY_POOL_ID }} --roles authenticated=${{ env.AUTH_ROLE_ARN }} --region <your-region>
+        aws cognito-identity set-identity-pool-roles --identity-pool-id ${{ env.IDENTITY_POOL_ID }} --roles authenticated=${{ env.AUTH_ROLE_ARN }} --region ${{ secrets.REGION }}
