@@ -1,0 +1,56 @@
+name: Setup Cognito with IAM Roles
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  setup-cognito:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.REGION }}
+
+    - name: Create Cognito User Pool
+      id: create_user_pool
+      run: |
+        aws cognito-idp create-user-pool --pool-name MyUserPool --region ${{ secrets.REGION }} > user-pool-output.json
+        USER_POOL_ID=$(jq -r '.UserPool.Id' user-pool-output.json)
+        echo "USER_POOL_ID=$USER_POOL_ID" >> $GITHUB_ENV
+
+    - name: Create Cognito Identity Pool
+      id: create_identity_pool
+      run: |
+        aws cognito-identity create-identity-pool --identity-pool-name MyIdentityPool --allow-unauthenticated-identities --region ${{ secrets.REGION }} > identity-pool-output.json
+        IDENTITY_POOL_ID=$(jq -r '.IdentityPoolId' identity-pool-output.json)
+        echo "IDENTITY_POOL_ID=$IDENTITY_POOL_ID" >> $GITHUB_ENV
+
+    - name: Update Trust Policy with Identity Pool ID
+      run: |
+        jq '.Statement[0].Condition.StringEquals."cognito-identity.amazonaws.com:aud" = env.IDENTITY_POOL_ID' trust-policy-template.json > trust-policy.json
+
+    - name: Create Authenticated Role
+      id: create_auth_role
+      run: |
+        aws iam create-role --role-name AuthenticatedRole --assume-role-policy-document file://trust-policy.json > auth-role-output.json
+        AUTH_ROLE_ARN=$(jq -r '.Role.Arn' auth-role-output.json)
+        echo "AUTH_ROLE_ARN=$AUTH_ROLE_ARN" >> $GITHUB_ENV
+
+    - name: Attach Policies to Authenticated Role
+      run: |
+        aws iam attach-role-policy --role-name AuthenticatedRole --policy-arn arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+        aws iam attach-role-policy --role-name AuthenticatedRole --policy-arn arn:aws:iam::aws:policy/AmazonEKSVPCResourceController
+        # Add any additional policies needed for network access to EKS private endpoints
+
+    - name: Configure Identity Providers
+      run: |
+        aws cognito-identity set-identity-pool-roles --identity-pool-id ${{ env.IDENTITY_POOL_ID }} --roles authenticated=${{ env.AUTH_ROLE_ARN }} --region ${{ secrets.REGION }}
