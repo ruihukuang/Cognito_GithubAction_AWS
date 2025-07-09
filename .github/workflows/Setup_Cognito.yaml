@@ -97,17 +97,25 @@ jobs:
          role-to-assume: arn:aws:iam::${{ secrets.ACCOUNT_ID }}:role/${{ secrets.ROLE_NAME }}
          aws-region: ${{ secrets.REGION }}
 
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v1
-      with:
-        version: 'latest'
-
-    - name: Update kubeconfig
+    - name: Deploy CloudFormation Stack
       run: |
-        aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER }} --region ${{ secrets.REGION }} 
+        aws cloudformation deploy \
+          --template-file CloudFormation/bastion_host.yaml \
+          --stack-name BastionHostStack
 
-    - name: Access EKS
+    - name: Get Bastion Host Public IP
+      id: bastion_ip
       run: |
+        bastion_ip=$(aws cloudformation describe-stacks --stack-name BastionHostStack --query "Stacks[0].Outputs[?OutputKey=='BastionPublicIP'].OutputValue" --output text)
+        echo "::set-output name=ip::$bastion_ip"
+
+    - name: SSH to Bastion Host and Update Kubeconfig
+      env:
+        BASTION_IP: ${{ steps.bastion_ip.outputs.ip }}
+      run: |
+        ssh -o StrictHostKeyChecking=no -i path/to/your-key.pem ec2-user@$BASTION_IP << EOF
+          aws eks update-kubeconfig --region your-region --name your-cluster-name
           kubectl get nodes
+        EOF
 
 

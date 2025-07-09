@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploy a Bastion Host in a Public Subnet
+
+Resources:
+  BastionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Bastion host security group
+      VpcId: vpc-xxxxxxxx  # Replace with your VPC ID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 10.0.0.0/16  # Allow SSH from the same VPC in EKS
+
+  BastionInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-0025ae4a1c38f6944  # ubuntu-2404-standard-1746775846 
+      KeyName: EKS_Xgboost  # Replace with your key pair name
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          SubnetId: subnet-xxxxxxxx  # Replace with your public subnet ID
+          DeviceIndex: 0
+          GroupSet:
+            - Ref: BastionSecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install -y aws-cli
+          curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.21.14/2022-06-29/bin/linux/amd64/kubectl
+          chmod +x ./kubectl
+          mv ./kubectl /usr/local/bin
+
+Outputs:
+  BastionPublicIP:
+    Description: Public IP of the Bastion Host
+    Value: !GetAtt BastionInstance.PublicIp
