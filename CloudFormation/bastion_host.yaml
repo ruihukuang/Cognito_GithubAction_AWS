@@ -6,12 +6,20 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Bastion host security group
-      VpcId: vpc-xxxxxxxx  # Replace with your VPC ID
+      VpcId: vpc-013b2267cb2480527  # Replace with your VPC ID
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
           CidrIp: 10.0.0.0/16  # Allow SSH from the same VPC in EKS
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: vpc-013b2267cb2480527  # Replace with your VPC ID
+      CidrBlock: 10.0.0.0/24  # Define the CIDR block for the public subnet
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: ap-southeast-2a  # Replace with your desired availability zone
 
   BastionInstance:
     Type: AWS::EC2::Instance
@@ -21,7 +29,7 @@ Resources:
       KeyName: EKS_Xgboost  # Replace with your key pair name
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
-          SubnetId: subnet-xxxxxxxx  # Replace with your public subnet ID
+          SubnetId: !Ref PublicSubnet
           DeviceIndex: 0
           GroupSet:
             - Ref: BastionSecurityGroup
