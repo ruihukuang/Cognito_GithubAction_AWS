@@ -1,8 +1,0 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Description: Create a Key Pair
-
-Resources:
-  BastionKeyPair:
-    Type: AWS::EC2::KeyPair
-    Properties:
-      KeyName: EKS_Xgboost  # Replace with your desired key pair name
