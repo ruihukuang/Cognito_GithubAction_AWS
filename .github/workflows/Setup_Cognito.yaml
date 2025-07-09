@@ -96,9 +96,17 @@ jobs:
       with:
          role-to-assume: arn:aws:iam::${{ secrets.ACCOUNT_ID }}:role/${{ secrets.ROLE_NAME }}
          aws-region: ${{ secrets.REGION }}
+    
+    - name: Check if Stack Exists
+      id: check_stack
+      run: |
+        STACK_NAME="BastionHostStack"
+        aws cloudformation describe-stacks --stack-name $STACK_NAME || echo "Stack does not exist" > stack_status.txt
+        
 
     - name: Check CloudFormation Stack Status
       id: check_status
+      if: steps.check_stack.outputs.stack_status != 'Stack does not exist'
       run: |
         STACK_STATUS=$(aws cloudformation describe-stacks --stack-name BastionHostStack --query "Stacks[0].StackStatus" --output text)
         echo "Stack status is $STACK_STATUS"
