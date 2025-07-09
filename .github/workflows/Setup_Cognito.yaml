@@ -97,12 +97,26 @@ jobs:
          role-to-assume: arn:aws:iam::${{ secrets.ACCOUNT_ID }}:role/${{ secrets.ROLE_NAME }}
          aws-region: ${{ secrets.REGION }}
 
+    - name: Check CloudFormation Stack Status
+      id: check_status
+      run: |
+        STACK_STATUS=$(aws cloudformation describe-stacks --stack-name BastionHostStack --query "Stacks[0].StackStatus" --output text)
+        echo "Stack status is $STACK_STATUS"
+        echo "::set-output name=status::$STACK_STATUS"
+
+    - name: Delete CloudFormation Stack if ROLLBACK_COMPLETE
+      if: steps.check_status.outputs.status == 'ROLLBACK_COMPLETE'
+      run: |
+        aws cloudformation delete-stack --stack-name BastionHostStack
+        aws cloudformation wait stack-delete-complete --stack-name BastionHostStack
+
     - name: Deploy CloudFormation Stack
       run: |
         aws cloudformation deploy \
           --template-file CloudFormation/bastion_host.yaml \
           --stack-name BastionHostStack
-
+        aws cloudformation wait stack-create-complete --stack-name BastionHostStack
+    
     - name: Get Bastion Host Public IP
       id: bastion_ip
       run: |
