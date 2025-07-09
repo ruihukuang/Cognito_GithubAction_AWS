@@ -110,11 +110,6 @@ jobs:
         aws cloudformation delete-stack --stack-name BastionHostStack
         aws cloudformation wait stack-delete-complete --stack-name BastionHostStack
 
-    - name: Deploy Key Pair Stack
-      run: |
-        aws cloudformation deploy --stack-name KeyPairStack --template-file CloudFormation/Key_Pair_EC2.yaml
-        aws cloudformation wait stack-create-complete --stack-name KeyPairStack
-
     - name: Deploy CloudFormation Stack
       run: |
         aws cloudformation deploy \
