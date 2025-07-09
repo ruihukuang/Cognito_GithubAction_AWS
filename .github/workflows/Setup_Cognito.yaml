@@ -104,7 +104,7 @@ jobs:
 
     - name: Update kubeconfig
       run: |
-        aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER }} --region ${{ secrets.REGION }} --role-arn arn:aws:iam::${{ secrets.ACCOUNT_ID }}:role/${{ secrets.ROLE_NAME }}
+        aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER }} --region ${{ secrets.REGION }} 
 
     - name: Access EKS
       run: |
