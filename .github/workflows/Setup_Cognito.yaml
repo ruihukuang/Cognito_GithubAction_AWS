@@ -122,7 +122,13 @@ jobs:
         aws cloudformation delete-stack --stack-name BastionHostStack
         aws cloudformation wait stack-delete-complete --stack-name BastionHostStack
 
+    - name: Delete CloudFormation Stack if ROLLBACK_COMPLETE
+      if: steps.check_status.outputs.status == 'CREATE_COMPLETE'  && env.exists == 'true'
+      run: |
+        echo "Keep the stack and do nothing"
+
     - name: Deploy CloudFormation Stack
+      if: env.exists == 'false'
       run: |
         aws cloudformation deploy \
           --template-file CloudFormation/bastion_host.yaml \
