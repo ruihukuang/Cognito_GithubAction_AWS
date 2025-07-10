@@ -6,7 +6,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Bastion host security group
-      VpcId: vpc-0aaa60ef2823e00cc  # Replace with your VPC ID
+      VpcId: vpc-01592e0f2ba1ffbd0  # Replace with your VPC ID
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
