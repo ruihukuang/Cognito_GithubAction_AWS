@@ -107,7 +107,6 @@ jobs:
           echo "exists=false" >> $GITHUB_ENV
         fi
         
-
     - name: Check CloudFormation Stack Status
       id: check_status
       if: env.exists == 'true'
@@ -122,13 +121,7 @@ jobs:
         aws cloudformation delete-stack --stack-name BastionHostStack
         aws cloudformation wait stack-delete-complete --stack-name BastionHostStack
 
-    - name: Delete CloudFormation Stack if ROLLBACK_COMPLETE
-      if: steps.check_status.outputs.status == 'CREATE_COMPLETE'  && env.exists == 'true'
-      run: |
-        echo "Keep the stack and do nothing"
-
     - name: Deploy CloudFormation Stack
-      if: env.exists == 'false'
       run: |
         aws cloudformation deploy \
           --template-file CloudFormation/bastion_host.yaml \
@@ -151,6 +144,7 @@ jobs:
         BASTION_IP: ${{ steps.bastion_ip.outputs.ip }}
       run: |
         ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@$BASTION_IP << EOF
+          set -x  # Enable command tracing
           aws eks update-kubeconfig --region ${{ secrets.REGION }} --name MyEKSCluster
           kubectl get nodes
         EOF
