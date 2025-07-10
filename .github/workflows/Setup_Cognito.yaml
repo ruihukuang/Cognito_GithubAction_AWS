@@ -122,7 +122,13 @@ jobs:
         aws cloudformation delete-stack --stack-name BastionHostStack
         aws cloudformation wait stack-delete-complete --stack-name BastionHostStack
 
+    - name: Delete CloudFormation Stack if ROLLBACK_COMPLETE
+      if: steps.check_status.outputs.status == 'CREATE_COMPLETE'  && env.exists == 'true'
+      run: |
+        echo "Keep the stack and do nothing"
+
     - name: Deploy CloudFormation Stack
+      if: env.exists == 'false'
       run: |
         aws cloudformation deploy \
           --template-file CloudFormation/bastion_host.yaml \
@@ -135,12 +141,17 @@ jobs:
         bastion_ip=$(aws cloudformation describe-stacks --stack-name BastionHostStack --query "Stacks[0].Outputs[?OutputKey=='BastionPublicIP'].OutputValue" --output text)
         echo "::set-output name=ip::$bastion_ip"
 
+    - name: Create SSH key file
+      run: |
+        echo "${{ secrets.SSH_KEY }}" > key.pem
+        chmod 600 key.pem
+
     - name: SSH to Bastion Host and Update Kubeconfig
       env:
         BASTION_IP: ${{ steps.bastion_ip.outputs.ip }}
       run: |
-        ssh -o StrictHostKeyChecking=no -i path/to/your-key.pem ec2-user@$BASTION_IP << EOF
-          aws eks update-kubeconfig --region your-region --name your-cluster-name
+        ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@$BASTION_IP << EOF
+          aws eks update-kubeconfig --region ${{ secrets.REGION }} --name MyEKSCluster
           kubectl get nodes
         EOF
 
