@@ -143,7 +143,7 @@ jobs:
       env:
         BASTION_IP: ${{ steps.bastion_ip.outputs.ip }}
       run: |
-        ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@$BASTION_IP << EOF
+        ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@$BASTION_IP << EOF
           set -x  # Enable command tracing
           aws eks update-kubeconfig --region ${{ secrets.REGION }} --name MyEKSCluster
           kubectl get nodes
