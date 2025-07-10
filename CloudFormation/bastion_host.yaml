@@ -11,7 +11,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 10.0.0.0/16  # Allow SSH from the same VPC in EKS
+          CidrIp: 0.0.0.0/0  # Allow SSH from the same VPC in EKS and local machine or github runners
 
   PublicSubnet:
     Type: AWS::EC2::Subnet
