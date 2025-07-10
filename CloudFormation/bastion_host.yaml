@@ -13,18 +13,6 @@ Resources:
           ToPort: 22
           CidrIp: 10.0.0.0/16  # Allow SSH from the same VPC in EKS
 
-  # Use existing Internet Gateway
-  ExistingInternetGateway:
-    Type: AWS::EC2::InternetGateway
-    Properties:
-      InternetGatewayId: igw-021a8bd115ddfac10  # Replace with your existing Internet Gateway ID
-
-  # Use existing Route Table
-  ExistingRouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      RouteTableId: rtb-0fa65a668719ca986  # Replace with your existing Route Table ID
-
   PublicSubnet:
     Type: AWS::EC2::Subnet
     Properties:
@@ -37,7 +25,7 @@ Resources:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PublicSubnet
-      RouteTableId: !Ref ExistingRouteTable
+      RouteTableId: rtb-0fa65a668719ca986  # Replace with your existing Route Table ID
 
   BastionInstance:
     Type: AWS::EC2::Instance
