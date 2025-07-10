@@ -16,7 +16,7 @@ Resources:
   PublicSubnet:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: vpc-0aaa60ef2823e00cc  # Replace with your VPC ID
+      VpcId: vpc-01592e0f2ba1ffbd0  # Replace with your VPC ID
       CidrBlock: 10.0.3.0/24  # Define the CIDR block for the public subnet
       MapPublicIpOnLaunch: true
       AvailabilityZone: ap-southeast-2a  # Replace with your desired availability zone
