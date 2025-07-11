@@ -43,7 +43,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t4g.small
-      ImageId: ami-03d81f00767854636  #  (SupportedImages) - Amazon Linux 2023 ( al2023 ) arm64 - LATEST - 20250609-prod-z4ynwkxmexpkk
+      ImageId: ami-0012bb5da2face577  #  buildkite-stack-linux-arm64-2025-05-28T17-21-22Z-ap-southeast-2
       KeyName: EKS_Xgboost  # Replace with your key pair name
       IamInstanceProfile: !Ref BastionInstanceProfile
       NetworkInterfaces:
