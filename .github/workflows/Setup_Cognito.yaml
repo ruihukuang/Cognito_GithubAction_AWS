@@ -124,7 +124,7 @@ jobs:
     - name: Deploy CloudFormation Stack
       run: |
         aws cloudformation update-stack \
-          --template-body CloudFormation/bastion_host.yaml \
+          --template-body file://CloudFormation/bastion_host.yaml \
           --stack-name BastionHostStack
           --capabilities CAPABILITY_IAM
         aws cloudformation wait stack-create-complete --stack-name BastionHostStack
