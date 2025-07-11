@@ -1,10 +1,8 @@
 name: Setup Cognito with IAM Roles
 
 on:
-  push:
-    branches:
-      - main
-
+  workflow_dispatch:
+  
 jobs:
   setup-cognito:
     runs-on: ubuntu-latest
