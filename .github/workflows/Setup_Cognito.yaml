@@ -116,7 +116,7 @@ jobs:
         echo "::set-output name=status::$STACK_STATUS"
 
     - name: Delete CloudFormation Stack if ROLLBACK_COMPLETE
-      if: (steps.check_status.outputs.status == 'ROLLBACK_COMPLETE' || steps.check_status.outputs.status == 'ROLLBACK_IN_PROGRESS'|| steps.check_status.outputs.status == 'UPDATE_ROLLBACK_COMPLETE' || steps.check_status.outputs.status == 'UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS') && env.exists == 'true'
+      if: (steps.check_status.outputs.status == 'ROLLBACK_COMPLETE' || steps.check_status.outputs.status == 'ROLLBACK_IN_PROGRESS'|| steps.check_status.outputs.status == 'UPDATE_ROLLBACK_COMPLETE' ) && env.exists == 'true'
       run: |
         aws cloudformation delete-stack --stack-name BastionHostStack
         aws cloudformation wait stack-delete-complete --stack-name BastionHostStack
