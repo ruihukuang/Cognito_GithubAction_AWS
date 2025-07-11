@@ -27,12 +27,19 @@ Resources:
       SubnetId: !Ref PublicSubnet
       RouteTableId: rtb-0fa65a668719ca986  # Replace with your existing Route Table ID
 
+  BastionInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref ExistingRole
+
   BastionInstance:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
       ImageId: ami-0025ae4a1c38f6944  # ubuntu-2404-standard-1746775846
       KeyName: EKS_Xgboost  # Replace with your key pair name
+      IamInstanceProfile: !Ref BastionInstanceProfile
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
           SubnetId: !Ref PublicSubnet
@@ -49,6 +56,12 @@ Resources:
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/
+          
+Parameters:
+  ExistingRole:
+    Type: String
+    Default: EKS-EC2-Role
+    Description: The name of the existing IAM role to attach to the EC2 instance.
 
 Outputs:
   BastionPublicIP:
