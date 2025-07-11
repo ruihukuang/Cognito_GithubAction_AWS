@@ -12,7 +12,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Bastion host security group
-      VpcId: vpc-0949a8f3e725bbaa0  # Replace with your VPC ID
+      VpcId: vpc-03b24cb494778b166  # Replace with your VPC ID
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -22,7 +22,7 @@ Resources:
   PublicSubnet:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: vpc-0949a8f3e725bbaa0  # Replace with your VPC ID
+      VpcId: vpc-03b24cb494778b166  # Replace with your VPC ID
       CidrBlock: 10.0.3.0/24  # Define the CIDR block for the public subnet
       MapPublicIpOnLaunch: true
       AvailabilityZone: ap-southeast-2a  # Replace with your desired availability zone
@@ -31,7 +31,7 @@ Resources:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PublicSubnet
-      RouteTableId: rtb-07a02359e02716784  # Replace with your existing Route Table ID
+      RouteTableId: rtb-08027178fbe31c523  # Replace with your existing Route Table ID
 
   BastionInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -43,7 +43,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
-      ImageId: ami-0025ae4a1c38f6944  # ubuntu-2404-standard-1746775846
+      ImageId: ami-03d81f00767854636  #  (SupportedImages) - Amazon Linux 2023 ( al2023 ) arm64 - LATEST - 20250609-prod-z4ynwkxmexpkk
       KeyName: EKS_Xgboost  # Replace with your key pair name
       IamInstanceProfile: !Ref BastionInstanceProfile
       NetworkInterfaces:
@@ -54,15 +54,19 @@ Resources:
             - !Ref BastionSecurityGroup
       UserData:
         Fn::Base64: !Sub |
-          #!/bin/bash
+          sudo yum update -y
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          sudo apt-get update
-          sudo apt-get install -y unzip
           unzip awscliv2.zip
           sudo ./aws/install
+          aws --version
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/
+          kubectl version --client
+          curl -o aws-iam-authenticator https://amazon-eks.s3.us-west-2.amazonaws.com/1.22.9/2021-11-02/bin/linux/amd64/aws-iam-authenticator
+          chmod +x aws-iam-authenticator
+          sudo mv aws-iam-authenticator /usr/local/bin/
+          aws-iam-authenticator help
 
 Outputs:
   BastionPublicIP:
