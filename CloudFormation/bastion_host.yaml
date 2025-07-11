@@ -1,6 +1,12 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Deploy a Bastion Host in a Public Subnet
 
+Parameters:
+  ExistingRole:
+    Type: String
+    Default: EKS-EC2-Role
+    Description: The name of the existing IAM role to attach to the EC2 instance.
+
 Resources:
   BastionSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -50,18 +56,12 @@ Resources:
         Fn::Base64: !Sub |
           #!/bin/bash
           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          sudo apt-get install unzip
+          sudo apt-get install -y unzip
           unzip awscliv2.zip
           sudo ./aws/install
           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/
-          
-Parameters:
-  ExistingRole:
-    Type: String
-    Default: EKS-EC2-Role
-    Description: The name of the existing IAM role to attach to the EC2 instance.
 
 Outputs:
   BastionPublicIP:
