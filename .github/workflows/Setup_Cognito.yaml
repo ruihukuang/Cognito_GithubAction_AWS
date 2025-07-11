@@ -123,9 +123,10 @@ jobs:
 
     - name: Deploy CloudFormation Stack
       run: |
-        aws cloudformation deploy \
-          --template-file CloudFormation/bastion_host.yaml \
+        aws cloudformation update-stack \
+          --template-body CloudFormation/bastion_host.yaml \
           --stack-name BastionHostStack
+          --capabilities CAPABILITY_IAM
         aws cloudformation wait stack-create-complete --stack-name BastionHostStack
     
     - name: Get Bastion Host Public IP
