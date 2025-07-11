@@ -6,7 +6,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Bastion host security group
-      VpcId: vpc-01592e0f2ba1ffbd0  # Replace with your VPC ID
+      VpcId: vpc-0949a8f3e725bbaa0  # Replace with your VPC ID
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -16,7 +16,7 @@ Resources:
   PublicSubnet:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: vpc-01592e0f2ba1ffbd0  # Replace with your VPC ID
+      VpcId: vpc-0949a8f3e725bbaa0  # Replace with your VPC ID
       CidrBlock: 10.0.3.0/24  # Define the CIDR block for the public subnet
       MapPublicIpOnLaunch: true
       AvailabilityZone: ap-southeast-2a  # Replace with your desired availability zone
@@ -25,7 +25,7 @@ Resources:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PublicSubnet
-      RouteTableId: rtb-0fa65a668719ca986  # Replace with your existing Route Table ID
+      RouteTableId: rtb-07a02359e02716784  # Replace with your existing Route Table ID
 
   BastionInstance:
     Type: AWS::EC2::Instance
