@@ -123,7 +123,7 @@ jobs:
 
     - name: Deploy CloudFormation Stack
       run: |
-        aws cloudformation update-stack \
+        aws cloudformation create-stack \
           --template-body file://CloudFormation/bastion_host.yaml \
           --stack-name BastionHostStack \
           --capabilities CAPABILITY_IAM
