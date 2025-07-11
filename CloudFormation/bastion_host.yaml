@@ -4,7 +4,7 @@ Description: Deploy a Bastion Host in a Public Subnet
 Parameters:
   ExistingRole:
     Type: String
-    Default: EKS-EC2-Role
+    Default: AuthenticatedRole
     Description: The name of the existing IAM role to attach to the EC2 instance.
 
 Resources:
@@ -12,7 +12,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Bastion host security group
-      VpcId: vpc-03b24cb494778b166  # Replace with your VPC ID
+      VpcId: vpc-0ab2fa31ef86d93a1  # Replace with your VPC ID
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -22,7 +22,7 @@ Resources:
   PublicSubnet:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: vpc-03b24cb494778b166  # Replace with your VPC ID
+      VpcId: vpc-0ab2fa31ef86d93a1  # Replace with your VPC ID
       CidrBlock: 10.0.3.0/24  # Define the CIDR block for the public subnet
       MapPublicIpOnLaunch: true
       AvailabilityZone: ap-southeast-2a  # Replace with your desired availability zone
@@ -31,7 +31,7 @@ Resources:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PublicSubnet
-      RouteTableId: rtb-08027178fbe31c523  # Replace with your existing Route Table ID
+      RouteTableId: rtb-0ebca012db63ecd6f  # Replace with your existing Route Table ID
 
   BastionInstanceProfile:
     Type: AWS::IAM::InstanceProfile
