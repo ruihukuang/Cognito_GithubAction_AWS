@@ -1,9 +1,7 @@
 name: Setup Cognito with IAM Roles
 
 on:
-  push:
-    branches:
-      - main
+ workflow_dispatch:
       
 permissions:
       id-token: write   # This is required for requesting the JWT
@@ -73,6 +71,15 @@ jobs:
         ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@$BASTION_IP << EOF
           set -x  # Enable command tracing
           aws eks update-kubeconfig --region ${{ secrets.REGION }} --name MyEKSCluster
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x ./kubectl
+          sudo mv kubectl /usr/local/bin/
+          kubectl version --client
+          wget https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.5.9/aws-iam-authenticator_0.5.9_linux_amd64
+          mv aws-iam-authenticator_0.5.9_linux_amd64 aws-iam-authenticator
+          chmod +x aws-iam-authenticator
+          sudo mv aws-iam-authenticator /usr/local/bin/
+          aws-iam-authenticator help
           kubectl get nodes
         EOF
 
