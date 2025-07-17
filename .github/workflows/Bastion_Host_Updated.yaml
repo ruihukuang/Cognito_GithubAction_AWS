@@ -69,7 +69,7 @@ jobs:
           --template-body file://CloudFormation/bastion_host.yaml \
           --stack-name BastionHostStack \
           --capabilities CAPABILITY_IAM \
-          --parameter-overrides RouteTableId=$route_table_id VpcId=$VPC_id
+          --parameters ParameterKey=RouteTableId,ParameterValue=$route_table_id ParameterKey=VpcId,ParameterValue=$VPC_id
         aws cloudformation wait stack-create-complete --stack-name BastionHostStack 
     
     - name: Get Bastion Host Public IP
