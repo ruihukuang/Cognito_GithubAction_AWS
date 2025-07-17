@@ -20,6 +20,24 @@ jobs:
       with:
          role-to-assume: arn:aws:iam::${{ secrets.ACCOUNT_ID }}:role/${{ secrets.ROLE_NAME }}
          aws-region: ${{ secrets.REGION }}
+
+    - name: Find Subnet ID
+      id: find_subnet
+      run: |
+        subnet_id=$(aws ec2 describe-subnets --filters "Name=cidrBlock,Values=10.0.0.0/24" --query "Subnets[*].SubnetId" --output text)
+        echo "Subnet ID: $subnet_id"
+        echo "::set-output name=subnet_id::$subnet_id"
+
+    - name: Find Route Table ID
+      run: |
+        subnet_id=${{ steps.find_subnet.outputs.subnet_id }}
+        route_table_id=$(aws ec2 describe-route-tables --filters "Name=association.subnet-id,Values=$subnet_id" --query "RouteTables[*].RouteTableId" --output text)
+        echo "Route Table ID: $route_table_id"
+
+    - name: Find VPC ID
+      run: |
+        VPC_id=$(aws ec2 describe-vpcs --filters "Name=cidr,Values=10.0.0.0/16" --query "Vpcs[*].VpcId" --output text)
+        echo "VPC ID: $VPC_id"
     
     - name: Check if Stack Exists
       id: check_stack
@@ -51,7 +69,7 @@ jobs:
           --template-body file://CloudFormation/bastion_host.yaml \
           --stack-name BastionHostStack \
           --capabilities CAPABILITY_IAM
-        aws cloudformation wait stack-create-complete --stack-name BastionHostStack
+        aws cloudformation wait stack-create-complete --stack-name BastionHostStack --parameter-overrides RouteTableId=$route_table_id VpcId=$VPC_id
     
     - name: Get Bastion Host Public IP
       id: bastion_ip
