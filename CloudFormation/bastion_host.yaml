@@ -6,13 +6,19 @@ Parameters:
     Type: String
     Default: AuthenticatedRole
     Description: The name of the existing IAM role to attach to the EC2 instance.
+  RouteTableId:
+    Type: String
+    Description: The Route Table ID to associate with the subnet.  
+  VpcId:
+    Type: String
+    Description: The Vpc ID
 
 Resources:
   BastionSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Bastion host security group
-      VpcId: vpc-059753e5115384c1d # Replace with your VPC ID
+      VpcId: !Ref VpcId # Replace with your VPC ID
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -22,7 +28,7 @@ Resources:
   PublicSubnet:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: vpc-059753e5115384c1d  # Replace with your VPC ID
+      VpcId: !Ref VpcId  # Replace with your VPC ID
       CidrBlock: 10.0.3.0/24  # Define the CIDR block for the public subnet
       MapPublicIpOnLaunch: true
       AvailabilityZone: ap-southeast-2a  # Replace with your desired availability zone
@@ -31,7 +37,7 @@ Resources:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PublicSubnet
-      RouteTableId: rtb-0e6cf67428a0c2b96  # Replace with your existing Route Table ID
+      RouteTableId: !Ref RouteTableId  # Replace with your existing Route Table ID
 
   BastionInstanceProfile:
     Type: AWS::IAM::InstanceProfile
