@@ -36,17 +36,6 @@ jobs:
       run: |
         VPC_id=$(aws ec2 describe-vpcs --filters "Name=cidr,Values=10.0.0.0/16" --query "Vpcs[*].VpcId" --output text)
         echo "VPC_id=$VPC_id" >> $GITHUB_ENV
-
-    - name: List and Delete Security Groups related to VPC with cidr 10.0.0.0/16
-      run: |
-        # List security groups associated with the VPC
-        security_groups=$(aws ec2 describe-security-groups --filters "Name=vpc-id,Values=${{ env.VPC_id }}" --query "SecurityGroups[*].GroupId" --output text)
-        
-        # Loop through each security group and delete it
-        for sg in $security_groups; do
-          echo "Deleting security group: $sg"
-          aws ec2 delete-security-group --group-id $sg
-        done
     
     - name: Check if Stack Exists
       id: check_stack
