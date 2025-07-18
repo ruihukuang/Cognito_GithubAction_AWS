@@ -67,7 +67,7 @@ jobs:
           --template-body file://CloudFormation/bastion_host.yaml \
           --stack-name BastionHostStack \
           --capabilities CAPABILITY_IAM \
-          --parameters ParameterKey=RouteTableId,ParameterValue=${{ env.route_table_id }} ParameterKey=VpcId,ParameterValue=${{ env.VPC_id }}
+          --parameters ParameterKey=RouteTableId,ParameterValue=${{ env.route_table_id }} ParameterKey=VpcId,ParameterValue=${{ env.VPC_id }} ParameterKey=ExistingRole,ParameterValue=${{ secrets.ROLE_NAME }}
         aws cloudformation wait stack-create-complete --stack-name BastionHostStack 
     
     - name: Get Bastion Host Public IP
