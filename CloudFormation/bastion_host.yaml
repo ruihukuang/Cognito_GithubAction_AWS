@@ -4,7 +4,6 @@ Description: Deploy a Bastion Host in a Public Subnet
 Parameters:
   ExistingRole:
     Type: String
-    Default: AuthenticatedRole
     Description: The name of the existing IAM role to attach to the EC2 instance.
   RouteTableId:
     Type: String
