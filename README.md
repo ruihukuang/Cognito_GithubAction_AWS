@@ -1,6 +1,6 @@
 # Cognito_kubectl_AWS
 
-This repo is to create a Cognito user and to create a bastion host. This bastion host is to enable using kubectl to interact with a EKS cluster. 
+This repo is to create a Cognito user and to create a bastion host in public subnet in VPC. This bastion host is using kubectl to interact with a EKS cluster. 
 
 
 results
